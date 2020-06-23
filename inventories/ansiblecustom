@@ -1,0 +1,387 @@
+##                       ._____.   .__
+##  _____    ____   _____|__\_ |__ |  |   ____             ____ _____    ______
+##  \__  \  /    \ /  ___/  || __ \|  | _/ __ \   ______  /    \\__  \  /  ___/
+##   / __ \|   |  \\___ \|  || \_\ \  |_\  ___/  /_____/ |   |  \/ __ \_\___ \
+##  (____  /___|  /____  >__||___  /____/\___  >         |___|  (____  /____  >
+##       \/     \/     \/        \/          \/               \/     \/     \/
+##     a n s i b l e - n a s      https://github.com/davestephens/ansible-nas
+
+
+[all]
+## Example when running from a remote workstation
+ ansible-nas ansible_host=10.0.0.10
+
+## Example when running directly on your Ansible-NAS server
+# ansible-nas ansible_connection=local ansible_host=localhost
+
+[nas]
+ansible-nas
+
+# Downloading
+transmission_with_openvpn_enabled: true # Please see docs about how to set VPN credentials
+
+# Media Sourcing
+jellyfin_enabled: true
+emby_enabled: true
+plex_enabled: true
+
+# System Management
+heimdall_enabled: true
+organizr_enabled: true
+portainer_enabled: true
+glances_enabled: true
+stats_enabled: true
+guacamole_enabled: true
+netdata_enabled: true
+watchtower_enabled: true
+cloudflare_ddns_enabled: true
+cloudcmd_enabled: true
+virtual_desktop_enabled: true
+krusader_enabled: true
+
+# Backup & Restore
+nextcloud_enabled: false
+timemachine_enabled: false
+
+# Software build and CI
+gitlab_enabled: false
+
+# Ubooquity
+ubooquity_enabled: false
+
+###
+### General
+###
+# Sets the hostname of your Ansible NAS
+ansible_nas_hostname: ansible-nas
+
+# Sets the timezone for your Ansible NAS
+# You can find a list here https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+ansible_nas_timezone: Europe/London
+
+# Update all apt packages when playbook is run
+keep_packages_updated: true
+
+# Will be added to the docker group to give user command line access to docker
+ansible_nas_user: shem
+
+# Your email and domain, used for Let's Encrypt SSL certs
+ansible_nas_email: me@example.com
+
+# Applications will have subdomain SSL certificates created if Traefik is enabled, e.g. ansible-nas.<your-domain>, nextcloud.<your-domain>
+ansible_nas_domain: shemsrv.xyz
+
+###
+### Docker
+###
+# Where you want Docker to store images
+docker_image_directory: "{{ docker_home }}/data"
+
+# Where you want Docker to store its container data.
+docker_home: /mnt/Volume2/docker
+
+# Docker storage driver, see https://docs.docker.com/storage/storagedriver/select-storage-driver/#supported-backing-filesystems
+# You might want to change this to ZFS, depending on your underlying filesystem.
+docker_storage_driver: overlay2
+
+###
+### Samba
+###
+# The location where all shares will be created by default. Can be overridden on a per-share basis.
+# This path will be mounted to backup containers, Duplicati
+samba_shares_root: /mnt/Volume3
+
+# Where stuff downloaded will be stored
+downloads_root: "{{ samba_shares_root }}/downloads"
+
+# Where your movies are stored
+movies_root: "{{ samba_shares_root }}/movies"
+
+# Where your TV episodes are stored
+tv_root: "{{ samba_shares_root }}/tv"
+
+# Where torrent files are stored (picked up by Transmission for downloading)
+torrents_root: "{{ samba_shares_root }}/torrents"
+
+# Where music is stored
+music_root: "{{ samba_shares_root }}/music"
+
+# Where podcasts are stored
+podcasts_root: "{{ samba_shares_root }}/podcasts"
+
+# Where your books are stored
+books_root: "{{ samba_shares_root }}/books"
+
+# Where your comics are stored
+comics_root: "{{ samba_shares_root }}/comics"
+
+# Where photos are stored
+photos_root: "{{ samba_shares_root }}/photos"
+
+# The description that'll appear next to your Ansible-NAS box when browsing your network
+samba_server_string: Ansible NAS
+
+# Extra packages to install
+ansible_nas_extra_packages:
+  - smartmontools
+  - htop
+  - zfsutils-linux
+  - bonnie++
+  - unzip
+  - lm-sensors
+  - ctop
+
+ansible_python_interpreter: /usr/bin/python3
+
+###
+### Samba
+###
+# Seems to break browsing of the \\server-name shares root when enabled
+samba_mitigate_cve_2017_7494: false
+
+# Enable apple exentensions for compatibility with apple clients
+samba_apple_extensions: yes
+
+# The account used when Samba shares are accessed. Shouldn't need to change this unless you want to
+# mess with Samba user permissions.
+samba_guest_account: ansible-nas
+
+# How Samba behaves when an unknown user connects, see Samba docs for more info
+samba_map_to_guest: Bad Password
+
+# The NetBIOS hostname used by Samba on your network
+samba_netbios_name: "{{ ansible_nas_hostname }}"
+
+###
+### Heimdall
+###
+heimdall_available_externally: true
+heimdall_docker_image: linuxserver/heimdall:latest
+heimdall_data_directory: "{{ docker_home }}/heimdall"
+heimdall_port_http: "10080"
+heimdall_port_https: "10443"
+
+###
+### Transmission
+###
+transmission_available_externally: "false"
+transmission_with_openvpn_available_externally: "false"
+transmission_config_directory: "{{ docker_home }}/transmission/config"
+transmission_download_directory: "{{ downloads_root }}"
+transmission_watch_directory: "{{ torrents_root }}"
+transmission_user_id: "0"
+transmission_group_id: "0"
+transmission_local_network: "192.168.1.0/24"
+transmission_webui_port: "9092"
+transmission_external_port: "51414"
+transmission_openvpn_webui_port: "9091"
+transmission_openvpn_external_port: "51415"
+transmission_openvpn_proxy_port: "3128"
+transmission_openvpn_ratio_limit_enabled: "true"
+transmission_openvpn_ratio_limit: "2"
+
+# Transmission VPN Credentials
+# If you're using Transmission with a VPN, you'll need to set these credentials.
+# See https://github.com/haugene/docker-transmission-openvpn/ for supported VPN providers.
+openvpn_username: 2iGMHX29UJ1EZGNIYgfMYyOK
+openvpn_password: OQesJn+Tm1KWSBphSCEKiwVE
+openvpn_provider: PROTONVPN
+openvpn_config: United-Kingdom
+
+###
+### Plex
+###
+# If you're paranoid, set permissions to "ro" so Plex won't ever be able to
+# delete your files
+plex_available_externally: "true"
+plex_config_directory: "{{ docker_home }}/plex/config"
+plex_logs: "{{ docker_home }}/plex/logs"
+plex_movies_directory: "{{ movies_root }}"
+plex_movies_permissions: "ro"
+plex_tv_directory: "{{ tv_root }}"
+plex_tv_permissions: "ro"
+plex_photos_directory: "{{ photos_root }}"
+plex_photos_permissions: "ro"
+plex_podcasts_directory: "{{ podcasts_root }}"
+plex_podcasts_permissions: "ro"
+plex_music_directory: "{{ music_root }}"
+plex_music_permissions: "ro"
+plex_user_id: "0"
+plex_group_id: "0"
+plex_port: "32400"
+
+###
+### Emby
+###
+# If you're paranoid, set permissions to "ro" so Emby won't ever be able to
+# delete your files
+emby_available_externally: "true"
+emby_config_directory: "{{ docker_home }}/emby/config"
+emby_movies_directory: "{{ movies_root }}"
+emby_movies_permissions: "ro"
+emby_tv_directory: "{{ tv_root }}"
+emby_tv_permissions: "ro"
+emby_user_id: "0"
+emby_group_id: "0"
+emby_port_http: "8096"
+emby_port_https: "8920"
+
+###
+### OpenVPN
+###
+openvpn_config_directory: "{{ docker_home }}/openvpn"
+
+###
+### Portainer
+###
+portainer_available_externally: "false"
+portainer_data_directory: "{{ docker_home }}/portainer/config"
+portainer_port: "9000"
+
+###
+### Stats
+###
+grafana_available_externally: "false"
+telegraf_data_directory: "{{ docker_home }}/telegraf"
+influxdb_data_directory: "{{ docker_home }}/influxdb"
+grafana_data_directory: "{{ docker_home }}/grafana"
+stat_collection_interval: 15s
+grafana_influxdb_port: "8086"
+grafana_port: "3000"
+
+###
+### Gitlab
+###
+gitlab_available_externally: "false"
+gitlab_data_directory: "{{ docker_home }}/gitlab"
+gitlab_port_http: "4080"
+gitlab_port_https: "4443"
+gitlab_port_ssh: "422"
+
+###
+### Glances
+###
+glances_available_externally: "false"
+glances_port_one: "61208"
+glances_port_two: "61209"
+
+###
+### Nextcloud
+###
+nextcloud_available_externally: "true"
+nextcloud_data_directory: "{{ docker_home }}/nextcloud"
+nextcloud_port: "8080"
+
+###
+### nginx
+###
+nginx_data_directory: "{{ docker_home }}/nginx"
+nginx_port_http: "80"
+nginx_port_https: "443"
+
+###
+### Guacamole
+###
+guacamole_available_externally: "false"
+guacamole_data_directory: "{{ docker_home }}/guacamole"
+guacamole_port: "8090"
+
+###
+### Miniflux
+###
+miniflux_available_externally: "false"
+miniflux_data_directory: "{{ docker_home }}/miniflux"
+miniflux_admin_username: admin
+miniflux_admin_password: supersecure
+miniflux_port: "8070"
+
+###
+### Airsonic
+###
+airsonic_available_externally: "false"
+airsonic_data_directory: "{{ docker_home }}/airsonic"
+airsonic_music_directory: "{{ music_root }}"
+airsonic_podcasts_directory: "{{ podcasts_root }}"
+airsonic_port: "4040"
+
+
+###
+### CloudCmd
+###
+cloudcmd_available_externally: "false"
+cloudcmd_data_directory: "{{ docker_home }}/cloudcmd/config"
+cloudcmd_browse_directory: "/"
+cloudcmd_user_id: "0"
+cloudcmd_group_id: "0"
+cloudcmd_port: "7373"
+
+###
+### Krusader
+###
+krusader_available_externally: "false"
+krusader_config_directory: "{{ docker_home }}/krusader/config"
+krusader_browse_directory: "/"
+krusader_user_id: "0"
+krusader_group_id: "0"
+krusader_secure_connection: "0"
+krusader_vnc_password: "topsecret"
+krusader_port_http: "5800"
+krusader_port_vnc: "5900"
+
+###
+### Watchtower
+###
+# Sets the 6 field cron schedule to use for checks and updates. This will check at 5am daily.
+watchtower_cron_schedule: 0 0 5 * * *
+
+# Sets the Watchtower Docker start command. Different options can be supplied based on whether you want to receive
+# notifications or not, some examples are provided below. See https://github.com/v2tec/watchtower for more info.
+
+# No notifications
+watchtower_command: "--schedule '{{ watchtower_cron_schedule }}' --debug"
+
+# Email notifications
+# watchtower_command: "--schedule '{{ watchtower_cron_schedule }}' --notifications 'email' --notification-email-from 'ansible@nas.com' --notification-email-to '{{ ansible_nas_email }}' --notification-email-server 'my.email.server.com' --notification-email-server-port '25' --notification-email-server-user 'email_username' --notification-email-server-password 'top-secret'"
+
+# Slack notifications
+# watchtower_command: "--schedule '{{ watchtower_cron_schedule }}' --notifications 'slack' --notification-slack-hook-url 'https://hooks.slack.com/services/xxx/yyyyyyyyyyyyyyy' --notification-slack-identifier 'ansible-nas'"
+
+###
+### Time Machine
+###
+timemachine_data_directory: "{{ docker_home }}/timemachine"
+timemachine_volume_size_limit: "0"
+timemachine_password: timemachine
+timemachine_share_name: Data
+timemachine_log_level: error
+timemachine_port: "10445"
+
+###
+### Jellyfin
+###
+# If you're paranoid, set permissions to "ro" so jellyfin won't ever be able to
+# delete your files
+jellyfin_available_externally: "true"
+jellyfin_config_directory: "{{ docker_home }}/jellyfin/config"
+jellyfin_movies_directory: "{{ movies_root }}"
+jellyfin_movies_permissions: "ro"
+jellyfin_music_directory: "{{ music_root }}"
+jellyfin_music_permissions: "ro"
+jellyfin_photos_directory: "{{ photos_root }}"
+jellyfin_photos_permissions: "ro"
+jellyfin_tv_directory: "{{ tv_root }}"
+jellyfin_tv_permissions: "ro"
+jellyfin_user_id: "0"
+jellyfin_group_id: "0"
+jellyfin_port_http: "8896"
+jellyfin_port_https: "8928"
+
+###
+### Ubooquity
+###
+ubooquity_available_externally: "true"
+ubooquity_data_directory: "{{ docker_home }}/ubooquity"
+ubooquity_user_id: "0"
+ubooquity_group_id: "0"
+ubooquity_port_webui: "2202"
+ubooquity_port_admin: "2203"
